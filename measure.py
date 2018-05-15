@@ -1,6 +1,5 @@
 from psutil import Process, pid_exists
 from subprocess import Popen
-from sys import argv
 from timeit import default_timer as timer
 from time import sleep
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -11,10 +10,11 @@ names = {"time": "time", "cpu": "cpu", ("mem", "r"): "rss", ("mem", "v"): "vms",
          ("mem", "W"): "peak_wset", ("mem", "w"): "wset", ("mem", "P"): "peak_paged_pool", ("mem", "p"): "paged_pool",
          ("mem", "N"): "peak_nonpaged_pool", ("mem", "n"): "nonpaged_pool", ("mem", "f"): "pagefile",
          ("mem", "F"): "peak_pagefile", ("mem", "x"): "private", ("mem", "u"): "uss", ("io", "R"): "read_count",
-         ("io", "r"): "read_bytes", ("io", "W"): "write_count", ("io", "w"): "write_bytes", ("io", "O"): "other_count", ("io", "o"): "other_bytes"}
+         ("io", "r"): "read_bytes", ("io", "W"): "write_count", ("io", "w"): "write_bytes", ("io", "O"): "other_count",
+         ("io", "o"): "other_bytes"}
 
 
-def main(argv):
+def main():
     parser = ArgumentParser(formatter_class=RawTextHelpFormatter)
 
     parser.add_argument("path_to_executable")
@@ -66,12 +66,7 @@ def watch(pid: int, args):
         c += 1
         loop_a_time = timer() - start_time
 
-        stat = ""
-
-        snap = {}
-
-        snap["time"] = floor(loop_a_time * 1000)
-
+        snap = {"time": floor(loop_a_time * 1000)}
 
         ############################
         # CPU
@@ -95,7 +90,7 @@ def watch(pid: int, args):
         # Snap
         ############################
 
-        if (args.cpu):
+        if args.cpu:
             snap["cpu"] = cpu
 
         if args.mem.find('r') >= 0:
@@ -138,21 +133,18 @@ def watch(pid: int, args):
         if args.io.find('o') >= 0:
             snap[("io", "o")] = io.other_bytes
 
-
         if c == 1:
             methods.PrintAtEndMethod.init(list(snap.keys()))
 
         methods.PrintAtEndMethod.step(snap)
 
-        # print(stat)
-
         loop_z_time = (timer() - start_time - loop_a_time)
         # print("duration: " + str((loop_z_time*1000)))
         # print("sleep for " + str((int(args.time) / 1000.0 - loop_z_time)*1000))
         sleep(time_sec - loop_z_time)
-    print()
+
     methods.PrintAtEndMethod.finalize()
 
 
 if __name__ == '__main__':
-    main(argv)
+    main()
